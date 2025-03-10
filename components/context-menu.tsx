@@ -105,7 +105,7 @@ export function ContextMenu({
             value={text}
             onChange={(e) => setText(e.target.value)}
             autoFocus
-            className="mb-2 text-black"
+            className="mb-2 bg-white text-black border-gray-300 focus:border-blue-500"
             placeholder={isRenaming ? "Enter new name" : "Enter text"}
           />
           <div className="flex justify-end space-x-2">
