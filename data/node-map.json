@@ -1,0 +1,455 @@
+[
+  {
+    "id": "node-1",
+    "text": "Brain-Computer Interfaces",
+    "x": 175,
+    "y": 131,
+    "signals": [
+      {
+        "id": "signal-1",
+        "text": "Organoid Intelligence",
+        "x": 100,
+        "y": 41,
+        "parentId": "node-1"
+      },
+      {
+        "id": "signal-2",
+        "text": "Self-Growing Neural Interfaces",
+        "x": 343,
+        "y": 24,
+        "parentId": "node-1"
+      },
+      {
+        "id": "signal-1742908581620",
+        "text": "Wireless Brain-Implants",
+        "x": 465.28932188134524,
+        "y": 201.71067811865476,
+        "parentId": "node-1"
+      },
+      {
+        "id": "signal-1742908622836",
+        "text": "Memory Enhancement",
+        "x": 363.0983005625053,
+        "y": 259.7785252292473,
+        "parentId": "node-1"
+      }
+    ]
+  },
+  {
+    "id": "node-1742915177715",
+    "text": "Spatial Computing",
+    "x": 648,
+    "y": 127,
+    "signals": [
+      {
+        "id": "signal-1742915189335",
+        "text": "Spatial Reasoning",
+        "x": 465,
+        "y": 75,
+        "parentId": "node-1742915177715"
+      },
+      {
+        "id": "signal-1742915203372",
+        "text": "Dynamic NeRFs",
+        "x": 719,
+        "y": 23.602540378443877,
+        "parentId": "node-1742915177715"
+      },
+      {
+        "id": "signal-1742915209818",
+        "text": "Spatial Reasoning",
+        "x": 819.2893218813452,
+        "y": 188.71067811865476,
+        "parentId": "node-1742915177715"
+      },
+      {
+        "id": "signal-1742915217563",
+        "text": "Persistent Memory",
+        "x": 757.0983005625053,
+        "y": 290.7785252292473,
+        "parentId": "node-1742915177715"
+      },
+      {
+        "id": "signal-1742915223429",
+        "text": "Real-Time Digital Twins",
+        "x": 605.3974596215562,
+        "y": 327,
+        "parentId": "node-1742915177715"
+      }
+    ]
+  },
+  {
+    "id": "node-1742915238373",
+    "text": "AI",
+    "x": 930,
+    "y": 91,
+    "signals": [
+      {
+        "id": "signal-1742915252279",
+        "text": "Liquid Neural Nets",
+        "x": 987,
+        "y": 27,
+        "parentId": "node-1742915238373"
+      },
+      {
+        "id": "signal-1742915261155",
+        "text": "Neuromorphic Hardware",
+        "x": 1054,
+        "y": 182.60254037844388,
+        "parentId": "node-1742915238373"
+      },
+      {
+        "id": "signal-1742915267929",
+        "text": "Self-Assembling AI Models",
+        "x": 1052.2893218813451,
+        "y": 310.71067811865476,
+        "parentId": "node-1742915238373"
+      },
+      {
+        "id": "signal-1742915281380",
+        "text": "Neural Data Compression",
+        "x": 878.0983005625053,
+        "y": 309.7785252292473,
+        "parentId": "node-1742915238373"
+      }
+    ]
+  },
+  {
+    "id": "node-1742915278339",
+    "text": "Quantum Algorithms",
+    "x": 1331.2,
+    "y": 140.9,
+    "signals": [
+      {
+        "id": "signal-1742915301829",
+        "text": "Quantum Monte Carlo Speedup",
+        "x": 1120.2,
+        "y": 73.89999999999998,
+        "parentId": "node-1742915278339"
+      },
+      {
+        "id": "signal-1742915309804",
+        "text": "Quantum NLP for Symbolic AI",
+        "x": 1318.2,
+        "y": 26.502540378443882,
+        "parentId": "node-1742915278339"
+      },
+      {
+        "id": "signal-1742915316087",
+        "text": "Quantum-Assisted Differential Privacy",
+        "x": 1450.4893218813454,
+        "y": 229.61067811865476,
+        "parentId": "node-1742915278339"
+      },
+      {
+        "id": "signal-1742915332394",
+        "text": "Quantum-Inspired Tensor Networks",
+        "x": 1249.2983005625053,
+        "y": 259.6785252292473,
+        "parentId": "node-1742915278339"
+      }
+    ]
+  },
+  {
+    "id": "node-1742915346562",
+    "text": "Bioengineering",
+    "x": 178,
+    "y": 392,
+    "signals": [
+      {
+        "id": "signal-1742915361906",
+        "text": "Cultured Proteins",
+        "x": 34,
+        "y": 307,
+        "parentId": "node-1742915346562"
+      },
+      {
+        "id": "signal-1742915370656",
+        "text": "Self-Healing Living Materials",
+        "x": 127.00000000000003,
+        "y": 209.6025403784439,
+        "parentId": "node-1742915346562"
+      },
+      {
+        "id": "signal-1742915381134",
+        "text": "Programmable Gut Microbes",
+        "x": 299.28932188134524,
+        "y": 327.71067811865476,
+        "parentId": "node-1742915346562"
+      },
+      {
+        "id": "signal-1742915392915",
+        "text": "Synthetic Minimal Cells",
+        "x": 408.0983005625053,
+        "y": 423.7785252292473,
+        "parentId": "node-1742915346562"
+      },
+      {
+        "id": "signal-1742915398607",
+        "text": "Gene Circuit Programming",
+        "x": 405.39745962155615,
+        "y": 534,
+        "parentId": "node-1742915346562"
+      },
+      {
+        "id": "signal-1742915404007",
+        "text": "Computationally Designed Proteins",
+        "x": 220.9031132097581,
+        "y": 526.3883739117558,
+        "parentId": "node-1742915346562"
+      },
+      {
+        "id": "signal-1742915424673",
+        "text": "In-Situ CRISPR Editing",
+        "x": 75.61204674887132,
+        "y": 573.268343236509,
+        "parentId": "node-1742915346562"
+      },
+      {
+        "id": "signal-1742915431499",
+        "text": "Living Machines",
+        "x": 36.03073792140917,
+        "y": 453.2020143325669,
+        "parentId": "node-1742915346562"
+      }
+    ]
+  },
+  {
+    "id": "node-1742915447568",
+    "text": "Quantum Hardware",
+    "x": 585,
+    "y": 391,
+    "signals": [
+      {
+        "id": "signal-1742915457525",
+        "text": "Room-Temperature Qubits",
+        "x": 810,
+        "y": 430,
+        "parentId": "node-1742915447568"
+      },
+      {
+        "id": "signal-1742915469015",
+        "text": "Quantum Chiplet Integration",
+        "x": 768,
+        "y": 526.6025403784439,
+        "parentId": "node-1742915447568"
+      },
+      {
+        "id": "signal-1742915473748",
+        "text": "Neutral Atom Quantum Processors",
+        "x": 565.2893218813452,
+        "y": 509.71067811865476,
+        "parentId": "node-1742915447568"
+      }
+    ]
+  },
+  {
+    "id": "node-1742915489195",
+    "text": "Quantum Biology",
+    "x": 893.3,
+    "y": 614.8,
+    "signals": [
+      {
+        "id": "signal-1742915496462",
+        "text": "Sensors for Protein Folding",
+        "x": 930.3,
+        "y": 496.79999999999995,
+        "parentId": "node-1742915489195"
+      },
+      {
+        "id": "signal-1742915507521",
+        "text": "Molecular Docking",
+        "x": 863.3,
+        "y": 684.4025403784439,
+        "parentId": "node-1742915489195"
+      }
+    ]
+  },
+  {
+    "id": "node-1742915503838",
+    "text": "Agentic AI",
+    "x": 975.3,
+    "y": 407.79999999999995,
+    "signals": [
+      {
+        "id": "signal-1742915525897",
+        "text": "Self-Healing AI Agents",
+        "x": 1187.3,
+        "y": 369.79999999999995,
+        "parentId": "node-1742915503838"
+      },
+      {
+        "id": "signal-1742915535396",
+        "text": "Memory-Augmented Agents",
+        "x": 1195.3,
+        "y": 481.40254037844386,
+        "parentId": "node-1742915503838"
+      },
+      {
+        "id": "signal-1742915545828",
+        "text": "Multi-Agent Frameworks",
+        "x": 1117.5893218813453,
+        "y": 554.5106781186547,
+        "parentId": "node-1742915503838"
+      }
+    ]
+  },
+  {
+    "id": "node-1742915571513",
+    "text": "Quantum Computing",
+    "x": 1366,
+    "y": 438,
+    "signals": [
+      {
+        "id": "signal-1742915577890",
+        "text": "Quantum Key Distribution (QKD)",
+        "x": 1387,
+        "y": 325,
+        "parentId": "node-1742915571513"
+      },
+      {
+        "id": "signal-1742915589063",
+        "text": "Variational Quantum Error Correction (VQEC)",
+        "x": 1423,
+        "y": 545.6025403784439,
+        "parentId": "node-1742915571513"
+      }
+    ]
+  },
+  {
+    "id": "node-1742915701477",
+    "text": "Blockchain",
+    "x": 1099,
+    "y": 648,
+    "signals": [
+      {
+        "id": "signal-1742915706786",
+        "text": "Cross-Chain Zero-Knowledge Interoperability",
+        "x": 1318,
+        "y": 602,
+        "parentId": "node-1742915701477"
+      },
+      {
+        "id": "signal-1742915713059",
+        "text": "Identity Oracles",
+        "x": 1433,
+        "y": 723.6025403784439,
+        "parentId": "node-1742915701477"
+      },
+      {
+        "id": "signal-1742915721041",
+        "text": "On-Chain Verifiable Compute",
+        "x": 1371.2893218813454,
+        "y": 793.7106781186548,
+        "parentId": "node-1742915701477"
+      },
+      {
+        "id": "signal-1742915730291",
+        "text": "Zero-Knowledge Machine Learning",
+        "x": 1171.0983005625053,
+        "y": 797.7785252292473,
+        "parentId": "node-1742915701477"
+      },
+      {
+        "id": "signal-1742915735310",
+        "text": "Decentralized Physical Infrastructure Networks",
+        "x": 976.3974596215562,
+        "y": 745,
+        "parentId": "node-1742915701477"
+      }
+    ]
+  },
+  {
+    "id": "node-1742915753817",
+    "text": "Space",
+    "x": 660,
+    "y": 723,
+    "signals": [
+      {
+        "id": "signal-1742915784817",
+        "text": "Quantum Navigation for Deep Space Travel",
+        "x": 582,
+        "y": 584,
+        "parentId": "node-1742915753817"
+      },
+      {
+        "id": "signal-1742915791859",
+        "text": "Self-Healing Materials",
+        "x": 736,
+        "y": 639.6025403784439,
+        "parentId": "node-1742915753817"
+      },
+      {
+        "id": "signal-1742915802668",
+        "text": "3D Bioprinting",
+        "x": 833.2893218813452,
+        "y": 798.7106781186548,
+        "parentId": "node-1742915753817"
+      },
+      {
+        "id": "signal-1742915808790",
+        "text": "3D Bioprinting",
+        "x": 588.0983005625053,
+        "y": 820.7785252292473,
+        "parentId": "node-1742915753817"
+      },
+      {
+        "id": "signal-1742915814317",
+        "text": "Ice Mining",
+        "x": 492.3974596215562,
+        "y": 741,
+        "parentId": "node-1742915753817"
+      },
+      {
+        "id": "signal-1742915819757",
+        "text": "Bioengineered Space Crops",
+        "x": 493.9031132097581,
+        "y": 654.3883739117558,
+        "parentId": "node-1742915753817"
+      }
+    ]
+  },
+  {
+    "id": "node-1742915759117",
+    "text": "Advanced Sensors",
+    "x": 220,
+    "y": 697,
+    "signals": [
+      {
+        "id": "signal-1742915833826",
+        "text": "Sub-THz Wireless Sensing",
+        "x": 328,
+        "y": 614,
+        "parentId": "node-1742915759117"
+      },
+      {
+        "id": "signal-1742915839538",
+        "text": "Triboelectric Sensors",
+        "x": 424,
+        "y": 792.6025403784439,
+        "parentId": "node-1742915759117"
+      },
+      {
+        "id": "signal-1742915854371",
+        "text": "DNA-Based Chemical Sensors",
+        "x": 257.28932188134524,
+        "y": 801.7106781186548,
+        "parentId": "node-1742915759117"
+      },
+      {
+        "id": "signal-1742915860427",
+        "text": "Graphene Nanosensors",
+        "x": 51.09830056250527,
+        "y": 773.7785252292473,
+        "parentId": "node-1742915759117"
+      },
+      {
+        "id": "signal-1742915869112",
+        "text": "Smart Bioelectronic Tattoos",
+        "x": 48.39745962155615,
+        "y": 638,
+        "parentId": "node-1742915759117"
+      }
+    ]
+  }
+]

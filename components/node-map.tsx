@@ -7,6 +7,9 @@ import { gsap } from "gsap"
 import { Button } from "@/components/ui/button"
 import { ContextMenu } from "@/components/context-menu"
 import saveAs from "file-saver"
+import initialNodesData from "@/data/node-map.json"
+import { ConnectionLine } from "./node-map/connection-line"
+import { calculateConnectionPoints } from "@/lib/utils/text-boundary"
 
 // Types
 export interface NodeData {
@@ -69,7 +72,7 @@ const initialNodes: NodeData[] = [
 ]
 
 export default function NodeMap() {
-  const [nodes, setNodes] = useState<NodeData[]>(initialNodes)
+  const [nodes, setNodes] = useState<NodeData[]>(initialNodesData)
   const [isLiveMode, setIsLiveMode] = useState(false)
   const [viewportOffset, setViewportOffset] = useState<ViewportOffset>({ x: 0, y: 0 })
   const [isDraggingViewport, setIsDraggingViewport] = useState(false)
@@ -260,52 +263,7 @@ export default function NodeMap() {
     }
   }
 
-  // Replace the current calculateLineOffsets function with this improved version that accounts for text dimensions
-  const calculateLineOffsets = (
-    nodeX: number,
-    nodeY: number,
-    signalX: number,
-    signalY: number,
-    nodeText: string,
-    signalText: string,
-  ) => {
-    // Calculate direction vector
-    const dx = signalX - nodeX
-    const dy = signalY - nodeY
-
-    // Calculate distance
-    const distance = Math.sqrt(dx * dx + dy * dy)
-
-    // Normalize direction vector
-    const nx = dx / distance
-    const ny = dy / distance
-
-    // Estimate text dimensions (approximate based on character count and font size)
-    // For nodes (larger font)
-    const nodeTextWidth = nodeText.length * 8 + 10 // Add padding
-    const nodeTextHeight = 20 + 10 // Font size + padding
-
-    // For signals (smaller font)
-    const signalTextWidth = signalText.length * 7 + 10 // Add padding
-    const signalTextHeight = 16 + 10 // Font size + padding
-
-    // Calculate elliptical offsets based on text dimensions and direction
-    // This creates an elliptical boundary around the text
-    const nodeOffsetX = nodeX + nx * ((Math.abs(nx) * nodeTextWidth) / 2 + (Math.abs(ny) * nodeTextHeight) / 2)
-    const nodeOffsetY = nodeY + ny * ((Math.abs(nx) * nodeTextWidth) / 2 + (Math.abs(ny) * nodeTextHeight) / 2)
-
-    const signalOffsetX = signalX - nx * ((Math.abs(nx) * signalTextWidth) / 2 + (Math.abs(ny) * signalTextHeight) / 2)
-    const signalOffsetY = signalY - ny * ((Math.abs(nx) * signalTextWidth) / 2 + (Math.abs(ny) * signalTextHeight) / 2)
-
-    return {
-      nodeOffsetX,
-      nodeOffsetY,
-      signalOffsetX,
-      signalOffsetY,
-    }
-  }
-
-  // Update the updateLine function to pass text content to calculateLineOffsets
+  // Remove the calculateLineOffsets function and update the updateLine function
   const updateLine = (nodeId: string, signalId: string) => {
     const lineElement = document.getElementById(`line-${nodeId}-${signalId}`)
     const dotElement = document.getElementById(`dot-${nodeId}-${signalId}`)
@@ -317,25 +275,25 @@ export default function NodeMap() {
     const signal = node?.signals.find((s) => s.id === signalId)
 
     if (lineElement && dotElement && nodePos && signalPos && node && signal) {
-      // Calculate offset points with text dimensions
-      const { nodeOffsetX, nodeOffsetY, signalOffsetX, signalOffsetY } = calculateLineOffsets(
+      // Calculate connection points using the same function as the ConnectionLine component
+      const { start, end } = calculateConnectionPoints(
+        node.text,
         nodePos.x,
         nodePos.y,
-        signalPos.x,
-        signalPos.y,
-        node.text,
         signal.text,
+        signalPos.x,
+        signalPos.y
       )
 
-      // Update line position with offsets
-      lineElement.setAttribute("x1", nodeOffsetX.toString())
-      lineElement.setAttribute("y1", nodeOffsetY.toString())
-      lineElement.setAttribute("x2", signalOffsetX.toString())
-      lineElement.setAttribute("y2", signalOffsetY.toString())
+      // Update line position
+      lineElement.setAttribute("x1", start.x.toString())
+      lineElement.setAttribute("y1", start.y.toString())
+      lineElement.setAttribute("x2", end.x.toString())
+      lineElement.setAttribute("y2", end.y.toString())
 
       // Update dot position
-      dotElement.setAttribute("cx", signalOffsetX.toString())
-      dotElement.setAttribute("cy", signalOffsetY.toString())
+      dotElement.setAttribute("cx", end.x.toString())
+      dotElement.setAttribute("cy", end.y.toString())
     }
   }
 
@@ -445,25 +403,25 @@ export default function NodeMap() {
         const lineElement = document.getElementById(`line-${node.id}-${signal.id}`)
         const dotElement = document.getElementById(`dot-${node.id}-${signal.id}`)
         if (lineElement && dotElement) {
-          // Calculate offset points with text dimensions
-          const { nodeOffsetX, nodeOffsetY, signalOffsetX, signalOffsetY } = calculateLineOffsets(
+          // Calculate connection points using the same function as the ConnectionLine component
+          const { start, end } = calculateConnectionPoints(
+            node.text,
             node.x,
             node.y,
-            signal.x,
-            signal.y,
-            node.text,
             signal.text,
+            signal.x,
+            signal.y
           )
 
-          // Update line position with offsets
-          lineElement.setAttribute("x1", nodeOffsetX.toString())
-          lineElement.setAttribute("y1", nodeOffsetY.toString())
-          lineElement.setAttribute("x2", signalOffsetX.toString())
-          lineElement.setAttribute("y2", signalOffsetY.toString())
+          // Update line position
+          lineElement.setAttribute("x1", start.x.toString())
+          lineElement.setAttribute("y1", start.y.toString())
+          lineElement.setAttribute("x2", end.x.toString())
+          lineElement.setAttribute("y2", end.y.toString())
 
           // Update dot position
-          dotElement.setAttribute("cx", signalOffsetX.toString())
-          dotElement.setAttribute("cy", signalOffsetY.toString())
+          dotElement.setAttribute("cx", end.x.toString())
+          dotElement.setAttribute("cy", end.y.toString())
         }
       })
     })
@@ -855,10 +813,33 @@ export default function NodeMap() {
   }
 
   // JSON import/export
-  const exportToJson = () => {
+  const exportToJson = (saveToFile: boolean = false) => {
     const dataStr = JSON.stringify(nodes, null, 2)
-    const blob = new Blob([dataStr], { type: "application/json" })
-    saveAs(blob, "node-map.json")
+    
+    if (saveToFile) {
+      // Save to project data file
+      fetch('/api/save-node-map', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: dataStr,
+      })
+      .then(response => {
+        if (!response.ok) {
+          throw new Error('Failed to save to project file')
+        }
+        alert('Successfully saved to project file')
+      })
+      .catch(error => {
+        console.error('Error saving to project file:', error)
+        alert('Failed to save to project file')
+      })
+    } else {
+      // Export as download
+      const blob = new Blob([dataStr], { type: "application/json" })
+      saveAs(blob, "node-map.json")
+    }
   }
 
   const importFromJson = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -870,14 +851,37 @@ export default function NodeMap() {
       try {
         if (event.target?.result) {
           const importedNodes = JSON.parse(event.target.result as string)
+          
+          // Validate the imported data structure
+          if (!Array.isArray(importedNodes)) {
+            throw new Error("Invalid JSON format: expected an array of nodes")
+          }
+
+          // Update nodes state
           setNodes(importedNodes)
 
+          // Update tracking maps
+          nodeRefsMap.current.clear()
+          signalRefsMap.current.clear()
+          
+          importedNodes.forEach(node => {
+            nodeRefsMap.current.set(node.id, { x: node.x, y: node.y })
+            node.signals.forEach((signal: SignalData) => {
+              signalRefsMap.current.set(signal.id, { x: signal.x, y: signal.y })
+            })
+          })
+
           // Reset viewport to center on the imported nodes
-          setTimeout(resetViewport, 100)
+          fitContentToViewport()
         }
       } catch (error) {
-        console.error("Failed to parse JSON:", error)
+        console.error("Failed to import JSON:", error)
+        alert("Failed to import JSON file. Please make sure it's a valid node map JSON file.")
       }
+    }
+    reader.onerror = () => {
+      console.error("Failed to read file")
+      alert("Failed to read the file. Please try again.")
     }
     reader.readAsText(file)
   }
@@ -911,15 +915,22 @@ export default function NodeMap() {
         </div>
         <div className="space-x-2">
           {!isLiveMode && <></>}
-          <Button onClick={exportToJson}>Export JSON</Button>
-          <label htmlFor="import-json">
-            <Button as="span">Import JSON</Button>
-            <input id="import-json" type="file" accept=".json" className="hidden" onChange={importFromJson} />
-          </label>
+          <Button onClick={() => exportToJson(false)}>Export JSON</Button>
+          <Button onClick={() => exportToJson(true)}>Save to Project</Button>
+          <input
+            id="import-json"
+            type="file"
+            accept=".json"
+            className="hidden"
+            onChange={importFromJson}
+          />
+          <Button onClick={() => document.getElementById('import-json')?.click()}>
+            Import JSON
+          </Button>
         </div>
       </div>
 
-      <div className="w-full h-[80vh] border border-gray-800 rounded-lg overflow-hidden relative">
+      <div className="w-full h-screen relative">
         {isLiveMode && (
           <div className="absolute top-2 right-2 bg-green-600 text-white px-2 py-1 rounded-md text-sm z-10 opacity-80">
             Live Mode Active
@@ -930,9 +941,16 @@ export default function NodeMap() {
             Edit Mode: {isDraggingViewport ? "Panning" : "Drag empty space to pan"}
           </div>
         )}
+        <div 
+          className="absolute inset-0 bg-cover bg-center bg-no-repeat"
+          style={{ 
+            backgroundImage: 'url("/images/starry-sky.jpg")',
+            opacity: 0.5,
+          }}
+        />
         <svg
           ref={svgRef}
-          className={`w-full h-full bg-black ${isLiveMode ? "cursor-default" : isDraggingViewport ? "cursor-grabbing" : "cursor-grab"}`}
+          className={`w-full h-full bg-transparent relative ${isLiveMode ? "cursor-default" : isDraggingViewport ? "cursor-grabbing" : "cursor-grab"}`}
           onContextMenu={(e) => handleContextMenu(e, "canvas")}
           onClick={closeContextMenu}
           onMouseDown={!isLiveMode ? handleViewportDragStart : undefined}
@@ -954,27 +972,18 @@ export default function NodeMap() {
             {/* Render connections */}
             {nodes.map((node) =>
               node.signals.map((signal) => (
-                <g key={`connection-${node.id}-${signal.id}`}>
-                  <line
-                    key={`line-${node.id}-${signal.id}`}
-                    id={`line-${node.id}-${signal.id}`}
-                    x1={node.x}
-                    y1={node.y}
-                    x2={signal.x}
-                    y2={signal.y}
-                    stroke="#A4A1FF"
-                    strokeWidth={1.5}
-                  />
-                  <circle
-                    key={`dot-${node.id}-${signal.id}`}
-                    id={`dot-${node.id}-${signal.id}`}
-                    cx={signal.x}
-                    cy={signal.y}
-                    r={3}
-                    fill="#A4A1FF"
-                  />
-                </g>
-              )),
+                <ConnectionLine
+                  key={`connection-${node.id}-${signal.id}`}
+                  nodeId={node.id}
+                  nodeText={node.text}
+                  nodeX={node.x}
+                  nodeY={node.y}
+                  signalId={signal.id}
+                  signalText={signal.text}
+                  signalX={signal.x}
+                  signalY={signal.y}
+                />
+              ))
             )}
 
             {/* Render nodes */}
@@ -1002,28 +1011,45 @@ export default function NodeMap() {
                 </text>
 
                 {/* Render signals */}
-                {node.signals.map((signal) => (
-                  <text
-                    key={signal.id}
-                    id={signal.id}
-                    x={0}
-                    y={0}
-                    transform={`translate(${signal.x}, ${signal.y})`}
-                    fill="#A4A1FF"
-                    fontSize="14"
-                    textAnchor="middle"
-                    dominantBaseline="middle"
-                    onContextMenu={(e) => handleContextMenu(e, "signal", signal.id, node.id)}
-                    onMouseDown={(e) => {
-                      e.stopPropagation() // Prevent viewport dragging when clicking on a signal
-                      handleDragStart(e, signal.id, "signal", node.id)
-                    }}
-                    style={{ cursor: isLiveMode ? "default" : "move" }}
-                    className={isLiveMode ? "" : "hover:text-green-300"}
-                  >
-                    {signal.text}
-                  </text>
-                ))}
+                {node.signals.map((signal) => {
+                  const lines = calculateConnectionPoints(
+                    node.text,
+                    node.x,
+                    node.y,
+                    signal.text,
+                    signal.x,
+                    signal.y
+                  ).signalLines;
+
+                  return (
+                    <g
+                      key={signal.id}
+                      id={signal.id}
+                      transform={`translate(${signal.x}, ${signal.y})`}
+                      onContextMenu={(e) => handleContextMenu(e, "signal", signal.id, node.id)}
+                      onMouseDown={(e) => {
+                        e.stopPropagation() // Prevent viewport dragging when clicking on a signal
+                        handleDragStart(e, signal.id, "signal", node.id)
+                      }}
+                      style={{ cursor: isLiveMode ? "default" : "move" }}
+                      className={isLiveMode ? "" : "hover:text-green-300"}
+                    >
+                      {lines.map((line: string, index: number) => (
+                        <text
+                          key={`${signal.id}-line-${index}`}
+                          x={0}
+                          y={index * 16} // 16px line height
+                          fill="#A4A1FF"
+                          fontSize="14"
+                          textAnchor="middle"
+                          dominantBaseline="middle"
+                        >
+                          {line}
+                        </text>
+                      ))}
+                    </g>
+                  );
+                })}
               </g>
             ))}
           </g>
