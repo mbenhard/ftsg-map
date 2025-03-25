@@ -26,31 +26,21 @@ interface TextOptions {
   maxWidth?: number;
 }
 
-// Get actual text measurements using canvas
-function getMeasuredTextWidth(text: string, fontSize: number, fontFamily: string): number {
-  const canvas = document.createElement('canvas');
-  const context = canvas.getContext('2d');
-  if (!context) return 0;
-  
-  context.font = `${fontSize}px ${fontFamily}`;
-  return context.measureText(text).width;
+// Simple text width estimation based on character count and font size
+function estimateTextWidth(text: string, fontSize: number): number {
+  // Average character width is roughly 60% of the font size
+  return text.length * fontSize * 0.6;
 }
 
-// Break text into lines based on maxWidth
-function breakTextIntoLines(text: string, fontSize: number, fontFamily: string, maxWidth: number): string[] {
+// Break text into lines based on maxWidth using simple estimation
+function breakTextIntoLines(text: string, fontSize: number, maxWidth: number): string[] {
   const words = text.split(' ');
   const lines: string[] = [];
   let currentLine = words[0];
 
-  const canvas = document.createElement('canvas');
-  const context = canvas.getContext('2d');
-  if (!context) return [text];
-
-  context.font = `${fontSize}px ${fontFamily}`;
-
   for (let i = 1; i < words.length; i++) {
     const word = words[i];
-    const width = context.measureText(`${currentLine} ${word}`).width;
+    const width = estimateTextWidth(`${currentLine} ${word}`, fontSize);
     if (width < maxWidth) {
       currentLine += " " + word;
     } else {
@@ -62,7 +52,7 @@ function breakTextIntoLines(text: string, fontSize: number, fontFamily: string, 
   return lines;
 }
 
-// Calculate text boundary with actual measurements and options
+// Calculate text boundary with estimated measurements and options
 export function calculateTextBoundary(
   text: string,
   x: number,
@@ -71,12 +61,12 @@ export function calculateTextBoundary(
   boundaryOptions: BoundaryOptions
 ): TextBoundary {
   const lines = boundaryOptions.maxWidth 
-    ? breakTextIntoLines(text, options.fontSize, options.fontFamily, boundaryOptions.maxWidth)
+    ? breakTextIntoLines(text, options.fontSize, boundaryOptions.maxWidth)
     : [text];
 
   // Get the widest line
   const width = Math.max(
-    ...lines.map(line => getMeasuredTextWidth(line, options.fontSize, options.fontFamily))
+    ...lines.map(line => estimateTextWidth(line, options.fontSize))
   );
   const height = options.fontSize * lines.length * 1.2; // 1.2 is the line height factor
 
@@ -221,7 +211,6 @@ export function calculateConnectionPoints(
   const signalLines = breakTextIntoLines(
     signalText,
     signalOptions.fontSize,
-    signalOptions.fontFamily,
     signalOptions.maxWidth || 0
   );
 
