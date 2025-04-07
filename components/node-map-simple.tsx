@@ -19,8 +19,6 @@ export default function NodeMapSimple() {
 
   // Update SVG size on resize and initial render
   useEffect(() => {
-    if (typeof window === 'undefined') return;
-
     const updateSvgSize = () => {
       if (svgRef.current) {
         const { width, height } = svgRef.current.getBoundingClientRect()
@@ -68,8 +66,6 @@ export default function NodeMapSimple() {
 
   // Start animations
   useEffect(() => {
-    if (typeof window === 'undefined') return;
-
     // Create a master timeline for better synchronization
     const masterTimeline = gsap.timeline()
     animationsRef.current.push(masterTimeline)
@@ -237,7 +233,7 @@ export default function NodeMapSimple() {
   }, [nodes, svgSize])
 
   return (
-    <div className="w-full min-h-screen relative flex flex-col live-mode">
+    <div className="w-full h-screen relative live-mode">
       <div 
         className="absolute inset-0 bg-cover bg-center bg-no-repeat"
         style={{ 
@@ -247,7 +243,7 @@ export default function NodeMapSimple() {
       />
       <svg
         ref={svgRef}
-        className="w-full flex-1 bg-transparent relative"
+        className="w-full h-full bg-transparent relative"
       >
         {/* Content group that will be transformed for panning */}
         <g

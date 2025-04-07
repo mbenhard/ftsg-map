@@ -2,7 +2,7 @@
 
 import type React from "react"
 
-import { useState, useRef, useEffect, useCallback } from "react"
+import { useState, useRef, useEffect } from "react"
 import { gsap } from "gsap"
 import { Button } from "@/components/ui/button"
 import { ContextMenu } from "@/components/context-menu"
@@ -112,8 +112,6 @@ export default function NodeMap() {
 
   // Update SVG size on resize and initial render
   useEffect(() => {
-    if (typeof window === 'undefined') return;
-
     const updateSvgSize = () => {
       if (svgRef.current) {
         const { width, height } = svgRef.current.getBoundingClientRect()
@@ -265,44 +263,39 @@ export default function NodeMap() {
     }
   }
 
-  // Update line positions
-  const updateLine = useCallback((nodeId: string, signalId: string) => {
-    if (typeof window === 'undefined') return;
-
-    const nodeElement = document.getElementById(nodeId)
-    const signalElement = document.getElementById(signalId)
+  // Remove the calculateLineOffsets function and update the updateLine function
+  const updateLine = (nodeId: string, signalId: string) => {
     const lineElement = document.getElementById(`line-${nodeId}-${signalId}`)
     const dotElement = document.getElementById(`dot-${nodeId}-${signalId}`)
+    const nodePos = nodeRefsMap.current.get(nodeId)
+    const signalPos = signalRefsMap.current.get(signalId)
 
-    if (nodeElement && signalElement && lineElement && dotElement) {
-      const nodeRect = nodeElement.getBoundingClientRect()
-      const signalRect = signalElement.getBoundingClientRect()
-      const svgRect = svgRef.current?.getBoundingClientRect()
+    // Find the node and signal text
+    const node = nodes.find((n) => n.id === nodeId)
+    const signal = node?.signals.find((s) => s.id === signalId)
 
-      if (svgRect) {
-        const nodeX = nodeRect.left - svgRect.left + nodeRect.width / 2
-        const nodeY = nodeRect.top - svgRect.top + nodeRect.height / 2
-        const signalX = signalRect.left - svgRect.left + signalRect.width / 2
-        const signalY = signalRect.top - svgRect.top + signalRect.height / 2
+    if (lineElement && dotElement && nodePos && signalPos && node && signal) {
+      // Calculate connection points using the same function as the ConnectionLine component
+      const { start, end } = calculateConnectionPoints(
+        node.text,
+        nodePos.x,
+        nodePos.y,
+        signal.text,
+        signalPos.x,
+        signalPos.y
+      )
 
-        const { start, end } = calculateConnectionPoints(
-          nodes.find(n => n.id === nodeId)?.text || "",
-          nodeX,
-          nodeY,
-          nodes.find(n => n.id === nodeId)?.signals.find(s => s.id === signalId)?.text || "",
-          signalX,
-          signalY
-        )
+      // Update line position
+      lineElement.setAttribute("x1", start.x.toString())
+      lineElement.setAttribute("y1", start.y.toString())
+      lineElement.setAttribute("x2", end.x.toString())
+      lineElement.setAttribute("y2", end.y.toString())
 
-        lineElement.setAttribute("x1", start.x.toString())
-        lineElement.setAttribute("y1", start.y.toString())
-        lineElement.setAttribute("x2", end.x.toString())
-        lineElement.setAttribute("y2", end.y.toString())
-        dotElement.setAttribute("cx", end.x.toString())
-        dotElement.setAttribute("cy", end.y.toString())
-      }
+      // Update dot position
+      dotElement.setAttribute("cx", end.x.toString())
+      dotElement.setAttribute("cy", end.y.toString())
     }
-  }, [nodes])
+  }
 
   const startAnimations = () => {
     stopAnimations()
@@ -894,142 +887,186 @@ export default function NodeMap() {
   }
 
   return (
-    <div className="w-full min-h-screen relative flex flex-col">
-      {isLiveMode && (
-        <div className="absolute top-2 right-2 bg-green-600 text-white px-2 py-1 rounded-md text-sm z-10 opacity-80">
-          Live Mode Active
+    <div className="w-full">
+      <div className="flex justify-between mb-4">
+        <div className="space-x-2 bg-gray-900 p-1 rounded-md">
+          <Button
+            variant={isLiveMode ? "outline" : "default"}
+            onClick={() => setIsLiveMode(false)}
+            className={`${
+              !isLiveMode
+                ? "bg-blue-600 text-white border-blue-600 hover:bg-blue-700"
+                : "bg-transparent text-gray-300 hover:bg-gray-800 hover:text-white"
+            }`}
+          >
+            Edit Mode
+          </Button>
+          <Button
+            variant={isLiveMode ? "default" : "outline"}
+            onClick={() => setIsLiveMode(true)}
+            className={`${
+              isLiveMode
+                ? "bg-green-600 text-white border-green-600 hover:bg-green-700"
+                : "bg-transparent text-gray-300 hover:bg-gray-800 hover:text-white"
+            }`}
+          >
+            Live Mode
+          </Button>
         </div>
-      )}
-      {!isLiveMode && (
-        <div className="absolute top-2 left-2 bg-blue-600 text-white px-2 py-1 rounded-md text-sm z-10 opacity-80">
-          Edit Mode: {isDraggingViewport ? "Panning" : "Drag empty space to pan"}
+        <div className="space-x-2">
+          {!isLiveMode && <></>}
+          <Button onClick={() => exportToJson(false)}>Export JSON</Button>
+          <Button onClick={() => exportToJson(true)}>Save to Project</Button>
+          <input
+            id="import-json"
+            type="file"
+            accept=".json"
+            className="hidden"
+            onChange={importFromJson}
+          />
+          <Button onClick={() => document.getElementById('import-json')?.click()}>
+            Import JSON
+          </Button>
         </div>
-      )}
-      <div 
-        className="absolute inset-0 bg-cover bg-center bg-no-repeat"
-        style={{ 
-          backgroundImage: 'url("/images/starry-sky.jpg")',
-          opacity: 0.5,
-        }}
-      />
-      <svg
-        ref={svgRef}
-        className={`w-full flex-1 bg-transparent relative ${isLiveMode ? "cursor-default" : isDraggingViewport ? "cursor-grabbing" : "cursor-grab"}`}
-        onContextMenu={(e) => handleContextMenu(e, "canvas")}
-        onClick={closeContextMenu}
-        onMouseDown={!isLiveMode ? handleViewportDragStart : undefined}
-        onMouseMove={!isLiveMode ? handleViewportDragMove : undefined}
-        onMouseUp={!isLiveMode ? handleViewportDragEnd : undefined}
-        onMouseLeave={!isLiveMode ? handleViewportDragEnd : undefined}
-      >
-        {/* SVG content is divided into multiple layers: 
-            1. Fixed viewport boundary (blue dashed line)
-            2. Content boundary (green dashed line)
-            3. The content group that transforms during panning */}
+      </div>
 
-        {/* Content group that will be transformed for panning */}
-        <g
-          ref={contentGroupRef}
-          className={!isLiveMode ? "panning-active" : ""}
-          transform={isLiveMode ? "" : `translate(${viewportOffset.x}, ${viewportOffset.y})`}
+      <div className="w-full h-screen relative">
+        {isLiveMode && (
+          <div className="absolute top-2 right-2 bg-green-600 text-white px-2 py-1 rounded-md text-sm z-10 opacity-80">
+            Live Mode Active
+          </div>
+        )}
+        {!isLiveMode && (
+          <div className="absolute top-2 left-2 bg-blue-600 text-white px-2 py-1 rounded-md text-sm z-10 opacity-80">
+            Edit Mode: {isDraggingViewport ? "Panning" : "Drag empty space to pan"}
+          </div>
+        )}
+        <div 
+          className="absolute inset-0 bg-cover bg-center bg-no-repeat"
+          style={{ 
+            backgroundImage: 'url("/images/starry-sky.jpg")',
+            opacity: 0.5,
+          }}
+        />
+        <svg
+          ref={svgRef}
+          className={`w-full h-full bg-transparent relative ${isLiveMode ? "cursor-default" : isDraggingViewport ? "cursor-grabbing" : "cursor-grab"}`}
+          onContextMenu={(e) => handleContextMenu(e, "canvas")}
+          onClick={closeContextMenu}
+          onMouseDown={!isLiveMode ? handleViewportDragStart : undefined}
+          onMouseMove={!isLiveMode ? handleViewportDragMove : undefined}
+          onMouseUp={!isLiveMode ? handleViewportDragEnd : undefined}
+          onMouseLeave={!isLiveMode ? handleViewportDragEnd : undefined}
         >
-          {/* Render connections */}
-          {nodes.map((node) =>
-            node.signals.map((signal) => (
-              <ConnectionLine
-                key={`connection-${node.id}-${signal.id}`}
-                nodeId={node.id}
-                nodeText={node.text}
-                nodeX={node.x}
-                nodeY={node.y}
-                signalId={signal.id}
-                signalText={signal.text}
-                signalX={signal.x}
-                signalY={signal.y}
-              />
-            ))
-          )}
+          {/* SVG content is divided into multiple layers: 
+              1. Fixed viewport boundary (blue dashed line)
+              2. Content boundary (green dashed line)
+              3. The content group that transforms during panning */}
 
-          {/* Render nodes */}
-          {nodes.map((node) => (
-            <g key={node.id}>
-              <text
-                id={node.id}
-                x={0}
-                y={0}
-                transform={`translate(${node.x}, ${node.y})`}
-                fill="white"
-                fontSize="16"
-                fontWeight="bold"
-                textAnchor="middle"
-                dominantBaseline="middle"
-                onContextMenu={(e) => handleContextMenu(e, "node", node.id)}
-                onMouseDown={(e) => {
-                  e.stopPropagation() // Prevent viewport dragging when clicking on a node
-                  handleDragStart(e, node.id, "node")
-                }}
-                style={{ cursor: isLiveMode ? "default" : "move" }}
-                className={isLiveMode ? "" : "hover:text-blue-300"}
-              >
-                {node.text}
-              </text>
+          {/* Content group that will be transformed for panning */}
+          <g
+            ref={contentGroupRef}
+            className={!isLiveMode ? "panning-active" : ""}
+            transform={isLiveMode ? "" : `translate(${viewportOffset.x}, ${viewportOffset.y})`}
+          >
+            {/* Render connections */}
+            {nodes.map((node) =>
+              node.signals.map((signal) => (
+                <ConnectionLine
+                  key={`connection-${node.id}-${signal.id}`}
+                  nodeId={node.id}
+                  nodeText={node.text}
+                  nodeX={node.x}
+                  nodeY={node.y}
+                  signalId={signal.id}
+                  signalText={signal.text}
+                  signalX={signal.x}
+                  signalY={signal.y}
+                />
+              ))
+            )}
 
-              {/* Render signals */}
-              {node.signals.map((signal) => {
-                const lines = calculateConnectionPoints(
-                  node.text,
-                  node.x,
-                  node.y,
-                  signal.text,
-                  signal.x,
-                  signal.y
-                ).signalLines;
+            {/* Render nodes */}
+            {nodes.map((node) => (
+              <g key={node.id}>
+                <text
+                  id={node.id}
+                  x={0}
+                  y={0}
+                  transform={`translate(${node.x}, ${node.y})`}
+                  fill="white"
+                  fontSize="16"
+                  fontWeight="bold"
+                  textAnchor="middle"
+                  dominantBaseline="middle"
+                  onContextMenu={(e) => handleContextMenu(e, "node", node.id)}
+                  onMouseDown={(e) => {
+                    e.stopPropagation() // Prevent viewport dragging when clicking on a node
+                    handleDragStart(e, node.id, "node")
+                  }}
+                  style={{ cursor: isLiveMode ? "default" : "move" }}
+                  className={isLiveMode ? "" : "hover:text-blue-300"}
+                >
+                  {node.text}
+                </text>
 
-                return (
-                  <g
-                    key={signal.id}
-                    id={signal.id}
-                    transform={`translate(${signal.x}, ${signal.y})`}
-                    onContextMenu={(e) => handleContextMenu(e, "signal", signal.id, node.id)}
-                    onMouseDown={(e) => {
-                      e.stopPropagation() // Prevent viewport dragging when clicking on a signal
-                      handleDragStart(e, signal.id, "signal", node.id)
-                    }}
-                    style={{ cursor: isLiveMode ? "default" : "move" }}
-                    className={isLiveMode ? "" : "hover:text-green-300"}
-                  >
-                    {lines.map((line: string, index: number) => (
-                      <text
-                        key={`${signal.id}-line-${index}`}
-                        x={0}
-                        y={index * 16} // 16px line height
-                        fill="#A4A1FF"
-                        fontSize="12"
-                        textAnchor="middle"
-                        dominantBaseline="middle"
-                      >
-                        {line}
-                      </text>
-                    ))}
-                  </g>
-                );
-              })}
-            </g>
-          ))}
-        </g>
-      </svg>
+                {/* Render signals */}
+                {node.signals.map((signal) => {
+                  const lines = calculateConnectionPoints(
+                    node.text,
+                    node.x,
+                    node.y,
+                    signal.text,
+                    signal.x,
+                    signal.y
+                  ).signalLines;
+
+                  return (
+                    <g
+                      key={signal.id}
+                      id={signal.id}
+                      transform={`translate(${signal.x}, ${signal.y})`}
+                      onContextMenu={(e) => handleContextMenu(e, "signal", signal.id, node.id)}
+                      onMouseDown={(e) => {
+                        e.stopPropagation() // Prevent viewport dragging when clicking on a signal
+                        handleDragStart(e, signal.id, "signal", node.id)
+                      }}
+                      style={{ cursor: isLiveMode ? "default" : "move" }}
+                      className={isLiveMode ? "" : "hover:text-green-300"}
+                    >
+                      {lines.map((line: string, index: number) => (
+                        <text
+                          key={`${signal.id}-line-${index}`}
+                          x={0}
+                          y={index * 16} // 16px line height
+                          fill="#A4A1FF"
+                          fontSize="12"
+                          textAnchor="middle"
+                          dominantBaseline="middle"
+                        >
+                          {line}
+                        </text>
+                      ))}
+                    </g>
+                  );
+                })}
+              </g>
+            ))}
+          </g>
+        </svg>
+      </div>
 
       {/* Context Menu */}
       {contextMenu.show && (
         <ContextMenu
-          x={contextMenu.clientX || 0}
+          x={contextMenu.clientX || 0} // Use screen coordinates for positioning
           y={contextMenu.clientY || 0}
-          svgX={contextMenu.x}
+          svgX={contextMenu.x} // Pass SVG coordinates for operations
           svgY={contextMenu.y}
           type={contextMenu.type}
           id={contextMenu.id}
           parentId={contextMenu.parentId}
-          currentText={contextMenu.currentText}
+          currentText={contextMenu.currentText} // Pass current text for editing
           onClose={closeContextMenu}
           onAddNode={() => {
             addNode(contextMenu.x, contextMenu.y)
@@ -1062,3 +1099,4 @@ export default function NodeMap() {
     </div>
   )
 }
+
