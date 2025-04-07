@@ -88,6 +88,21 @@ function breakTextIntoLines(text: string, fontSize: number, maxWidth: number): s
 
 // Calculate actual text dimensions using canvas
 function calculateTextDimensions(text: string, options: TextOptions): { width: number; height: number; lineCount: number } {
+  // Check if we're in a browser environment
+  if (typeof window === 'undefined') {
+    // Return estimated dimensions for server-side rendering
+    const estimatedWidth = estimateTextWidth(text, options.fontSize);
+    const lines = options.maxWidth 
+      ? breakTextIntoLines(text, options.fontSize, options.maxWidth)
+      : [text];
+    const lineHeight = options.fontSize * 1.2;
+    return {
+      width: estimatedWidth,
+      height: lines.length * lineHeight,
+      lineCount: lines.length
+    };
+  }
+
   // Create a temporary canvas element
   const canvas = document.createElement('canvas');
   const context = canvas.getContext('2d');
