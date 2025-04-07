@@ -53,12 +53,38 @@ interface BoundaryOptions {
 }
 
 interface TextOptions {
+  fontSize: number;
+  lineHeight: number;
+  fontFamily: string;
+  fontWeight: string;
   alignment: 'left' | 'center' | 'right';
   verticalAlignment: 'top' | 'middle' | 'bottom';
-  fontSize: number;
-  fontFamily: string;
   maxWidth?: number;
 }
+
+interface ConnectionPoints {
+  start: Point;
+  end: Point;
+  signalLines: string[];
+}
+
+const nodeOptions: TextOptions = {
+  fontSize: 16,
+  lineHeight: 24,
+  fontFamily: 'sans-serif',
+  fontWeight: 'bold',
+  alignment: 'center',
+  verticalAlignment: 'middle'
+};
+
+const signalOptions: TextOptions = {
+  fontSize: 12,
+  lineHeight: 18,
+  fontFamily: 'sans-serif',
+  fontWeight: 'normal',
+  alignment: 'center',
+  verticalAlignment: 'middle'
+};
 
 // Simple text width estimation based on character count and font size
 function estimateTextWidth(text: string, fontSize: number): number {
@@ -247,42 +273,80 @@ export function calculateConnectionPoints(
   nodeY: number,
   signalText: string,
   signalX: number,
-  signalY: number,
-  customPadding?: LineBasedPadding
-): { start: Point; end: Point; signalLines: string[] } {
-  const nodeOptions: TextOptions = {
-    fontSize: 16,
-    fontFamily: 'sans-serif',
-    alignment: 'center',
-    verticalAlignment: 'middle'
-  };
+  signalY: number
+): ConnectionPoints {
+  // Handle server-side rendering by providing default values
+  if (typeof window === 'undefined') {
+    return {
+      start: { x: nodeX, y: nodeY },
+      end: { x: signalX, y: signalY },
+      signalLines: [signalText]
+    }
+  }
 
-  const signalOptions: TextOptions = {
-    fontSize: 12,
-    fontFamily: 'sans-serif',
-    alignment: 'center',
-    verticalAlignment: 'middle',
-    maxWidth: 150
-  };
+  // Create temporary elements for measurement
+  const tempNode = document.createElement("div")
+  const tempSignal = document.createElement("div")
+  tempNode.style.position = "absolute"
+  tempNode.style.visibility = "hidden"
+  tempNode.style.whiteSpace = "pre-wrap"
+  tempNode.style.width = "200px"
+  tempNode.style.fontSize = `${nodeOptions.fontSize}px`
+  tempNode.style.lineHeight = `${nodeOptions.lineHeight}px`
+  tempNode.style.fontFamily = nodeOptions.fontFamily
+  tempNode.style.fontWeight = nodeOptions.fontWeight
+  tempNode.style.textAlign = "center"
+  tempNode.textContent = nodeText
 
-  // Pass custom padding configuration through boundary options
-  const boundaryOptions: BoundaryOptions = {
-    maxWidth: signalOptions.maxWidth,
-    padding: customPadding
-  };
+  tempSignal.style.position = "absolute"
+  tempSignal.style.visibility = "hidden"
+  tempSignal.style.whiteSpace = "pre-wrap"
+  tempSignal.style.width = "200px"
+  tempSignal.style.fontSize = `${signalOptions.fontSize}px`
+  tempSignal.style.lineHeight = `${signalOptions.lineHeight}px`
+  tempSignal.style.fontFamily = signalOptions.fontFamily
+  tempSignal.style.fontWeight = signalOptions.fontWeight
+  tempSignal.style.textAlign = "center"
+  tempSignal.textContent = signalText
 
-  const nodeBoundary = calculateTextBoundary(nodeText, nodeX, nodeY, nodeOptions, boundaryOptions);
-  const signalBoundary = calculateTextBoundary(signalText, signalX, signalY, signalOptions, boundaryOptions);
+  document.body.appendChild(tempNode)
+  document.body.appendChild(tempSignal)
 
-  const start = findNearestBoundaryPoint(nodeBoundary, { x: signalX, y: signalY });
-  const end = findNearestBoundaryPoint(signalBoundary, { x: nodeX, y: nodeY });
+  // Get dimensions
+  const nodeRect = tempNode.getBoundingClientRect()
+  const signalRect = tempSignal.getBoundingClientRect()
 
-  // Get signal text lines for rendering
-  const signalLines = breakTextIntoLines(
-    signalText,
-    signalOptions.fontSize,
-    signalOptions.maxWidth || 0
-  );
+  // Clean up
+  document.body.removeChild(tempNode)
+  document.body.removeChild(tempSignal)
 
-  return { start, end, signalLines };
+  // Calculate connection points
+  const nodeWidth = nodeRect.width
+  const nodeHeight = nodeRect.height
+  const signalWidth = signalRect.width
+  const signalHeight = signalRect.height
+
+  // Calculate the angle between node and signal
+  const dx = signalX - nodeX
+  const dy = signalY - nodeY
+  const angle = Math.atan2(dy, dx)
+
+  // Calculate start point (node edge)
+  const nodeRadius = Math.sqrt(nodeWidth * nodeWidth + nodeHeight * nodeHeight) / 2
+  const startX = nodeX + Math.cos(angle) * nodeRadius
+  const startY = nodeY + Math.sin(angle) * nodeRadius
+
+  // Calculate end point (signal edge)
+  const signalRadius = Math.sqrt(signalWidth * signalWidth + signalHeight * signalHeight) / 2
+  const endX = signalX - Math.cos(angle) * signalRadius
+  const endY = signalY - Math.sin(angle) * signalRadius
+
+  // Split signal text into lines
+  const signalLines = signalText.split("\n")
+
+  return {
+    start: { x: startX, y: startY },
+    end: { x: endX, y: endY },
+    signalLines
+  }
 } 
