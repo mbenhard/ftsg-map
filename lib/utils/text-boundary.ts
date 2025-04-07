@@ -10,12 +10,46 @@ interface TextBoundary {
   height: number;
 }
 
+// Define padding configuration interface
+interface PaddingConfig {
+  top: number;
+  right: number;
+  bottom: number;
+  left: number;
+}
+
+// Define padding configurations for different line counts
+interface LineBasedPadding {
+  singleLine: PaddingConfig;
+  twoLines: PaddingConfig;
+  threeOrMore: PaddingConfig;
+}
+
+// Default padding configurations
+const defaultPadding: LineBasedPadding = {
+  singleLine: {
+    top: 15,
+    right: 18,
+    bottom: 10,
+    left: 15
+  },
+  twoLines: {
+    top: 8,
+    right: 15,
+    bottom: 25,
+    left: 15
+  },
+  threeOrMore: {
+    top: 1,
+    right: 15,
+    bottom: 24,
+    left: 15
+  }
+};
+
 interface BoundaryOptions {
-  padding: {
-    horizontal: number;
-    vertical: number;
-  };
   maxWidth?: number;
+  padding?: LineBasedPadding;
 }
 
 interface TextOptions {
@@ -52,6 +86,45 @@ function breakTextIntoLines(text: string, fontSize: number, maxWidth: number): s
   return lines;
 }
 
+// Calculate actual text dimensions using canvas
+function calculateTextDimensions(text: string, options: TextOptions): { width: number; height: number; lineCount: number } {
+  // Create a temporary canvas element
+  const canvas = document.createElement('canvas');
+  const context = canvas.getContext('2d');
+  if (!context) return { width: 0, height: 0, lineCount: 1 };
+
+  // Set font properties
+  context.font = `${options.fontSize}px ${options.fontFamily}`;
+  
+  // For multiline text, split and measure each line
+  const lines = options.maxWidth 
+    ? breakTextIntoLines(text, options.fontSize, options.maxWidth)
+    : [text];
+
+  // Calculate total width and height
+  const lineHeight = options.fontSize * 1.2; // 1.2 is standard line height
+  const width = Math.max(...lines.map(line => context.measureText(line).width));
+  const height = lines.length * lineHeight;
+
+  return { width, height, lineCount: lines.length };
+}
+
+// Calculate padding based on line count and custom configuration
+function calculatePadding(
+  dimensions: { width: number; height: number; lineCount: number },
+  customPadding?: LineBasedPadding
+): PaddingConfig {
+  const padding = customPadding || defaultPadding;
+  
+  if (dimensions.lineCount === 1) {
+    return padding.singleLine;
+  } else if (dimensions.lineCount === 2) {
+    return padding.twoLines;
+  } else {
+    return padding.threeOrMore;
+  }
+}
+
 // Calculate text boundary with estimated measurements and options
 export function calculateTextBoundary(
   text: string,
@@ -60,36 +133,34 @@ export function calculateTextBoundary(
   options: TextOptions,
   boundaryOptions: BoundaryOptions
 ): TextBoundary {
-  const lines = boundaryOptions.maxWidth 
-    ? breakTextIntoLines(text, options.fontSize, boundaryOptions.maxWidth)
-    : [text];
-
-  // Get the widest line
-  const width = Math.max(
-    ...lines.map(line => estimateTextWidth(line, options.fontSize))
-  );
-  const height = options.fontSize * lines.length * 1.2; // 1.2 is the line height factor
+  // Calculate actual text dimensions including line count
+  const dimensions = calculateTextDimensions(text, options);
+  
+  // Calculate padding based on line count and custom configuration
+  const padding = calculatePadding(dimensions, boundaryOptions.padding);
 
   // Calculate position based on alignment
   let xPos = x;
   if (options.alignment === 'center') {
-    xPos -= width / 2;
+    xPos -= dimensions.width / 2;
   } else if (options.alignment === 'right') {
-    xPos -= width;
+    xPos -= dimensions.width;
   }
 
   let yPos = y;
   if (options.verticalAlignment === 'middle') {
-    yPos -= height / 2;
+    yPos -= dimensions.height / 2;
   } else if (options.verticalAlignment === 'bottom') {
-    yPos -= height;
+    yPos -= dimensions.height;
   }
 
-  // Add padding
-  xPos -= boundaryOptions.padding.horizontal;
-  yPos -= boundaryOptions.padding.vertical;
-  const totalWidth = width + (boundaryOptions.padding.horizontal * 2);
-  const totalHeight = height + (boundaryOptions.padding.vertical * 2);
+  // Apply padding
+  xPos -= padding.left;
+  yPos -= padding.top;
+  
+  // Calculate total dimensions including padding
+  const totalWidth = dimensions.width + padding.left + padding.right;
+  const totalHeight = dimensions.height + padding.top + padding.bottom;
 
   return {
     x: xPos,
@@ -176,7 +247,8 @@ export function calculateConnectionPoints(
   nodeY: number,
   signalText: string,
   signalX: number,
-  signalY: number
+  signalY: number,
+  customPadding?: LineBasedPadding
 ): { start: Point; end: Point; signalLines: string[] } {
   const nodeOptions: TextOptions = {
     fontSize: 16,
@@ -186,19 +258,17 @@ export function calculateConnectionPoints(
   };
 
   const signalOptions: TextOptions = {
-    fontSize: 14,
+    fontSize: 12,
     fontFamily: 'sans-serif',
     alignment: 'center',
     verticalAlignment: 'middle',
-    maxWidth: 150 // Maximum width for signals before breaking into lines
+    maxWidth: 150
   };
 
+  // Pass custom padding configuration through boundary options
   const boundaryOptions: BoundaryOptions = {
-    padding: {
-      horizontal: 10,
-      vertical: 10
-    },
-    maxWidth: signalOptions.maxWidth
+    maxWidth: signalOptions.maxWidth,
+    padding: customPadding
   };
 
   const nodeBoundary = calculateTextBoundary(nodeText, nodeX, nodeY, nodeOptions, boundaryOptions);

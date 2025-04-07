@@ -233,7 +233,7 @@ export default function NodeMapSimple() {
   }, [nodes, svgSize])
 
   return (
-    <div className="w-full h-screen relative live-mode">
+    <div className="w-full min-h-screen relative flex flex-col live-mode">
       <div 
         className="absolute inset-0 bg-cover bg-center bg-no-repeat"
         style={{ 
@@ -243,7 +243,7 @@ export default function NodeMapSimple() {
       />
       <svg
         ref={svgRef}
-        className="w-full h-full bg-transparent relative"
+        className="w-full flex-1 bg-transparent relative"
       >
         {/* Content group that will be transformed for panning */}
         <g
@@ -307,7 +307,7 @@ export default function NodeMapSimple() {
                         x={0}
                         y={index * 16} // 16px line height
                         fill="#A4A1FF"
-                        fontSize="14"
+                        fontSize="12"
                         textAnchor="middle"
                         dominantBaseline="middle"
                       >
