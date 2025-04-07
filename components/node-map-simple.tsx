@@ -19,6 +19,8 @@ export default function NodeMapSimple() {
 
   // Update SVG size on resize and initial render
   useEffect(() => {
+    if (typeof window === 'undefined') return;
+
     const updateSvgSize = () => {
       if (svgRef.current) {
         const { width, height } = svgRef.current.getBoundingClientRect()
@@ -66,6 +68,8 @@ export default function NodeMapSimple() {
 
   // Start animations
   useEffect(() => {
+    if (typeof window === 'undefined') return;
+
     // Create a master timeline for better synchronization
     const masterTimeline = gsap.timeline()
     animationsRef.current.push(masterTimeline)

@@ -2,7 +2,7 @@
 
 import type React from "react"
 
-import { useState, useRef, useEffect } from "react"
+import { useState, useRef, useEffect, useCallback } from "react"
 import { gsap } from "gsap"
 import { Button } from "@/components/ui/button"
 import { ContextMenu } from "@/components/context-menu"
@@ -112,6 +112,8 @@ export default function NodeMap() {
 
   // Update SVG size on resize and initial render
   useEffect(() => {
+    if (typeof window === 'undefined') return;
+
     const updateSvgSize = () => {
       if (svgRef.current) {
         const { width, height } = svgRef.current.getBoundingClientRect()
@@ -263,39 +265,44 @@ export default function NodeMap() {
     }
   }
 
-  // Remove the calculateLineOffsets function and update the updateLine function
-  const updateLine = (nodeId: string, signalId: string) => {
+  // Update line positions
+  const updateLine = useCallback((nodeId: string, signalId: string) => {
+    if (typeof window === 'undefined') return;
+
+    const nodeElement = document.getElementById(nodeId)
+    const signalElement = document.getElementById(signalId)
     const lineElement = document.getElementById(`line-${nodeId}-${signalId}`)
     const dotElement = document.getElementById(`dot-${nodeId}-${signalId}`)
-    const nodePos = nodeRefsMap.current.get(nodeId)
-    const signalPos = signalRefsMap.current.get(signalId)
 
-    // Find the node and signal text
-    const node = nodes.find((n) => n.id === nodeId)
-    const signal = node?.signals.find((s) => s.id === signalId)
+    if (nodeElement && signalElement && lineElement && dotElement) {
+      const nodeRect = nodeElement.getBoundingClientRect()
+      const signalRect = signalElement.getBoundingClientRect()
+      const svgRect = svgRef.current?.getBoundingClientRect()
 
-    if (lineElement && dotElement && nodePos && signalPos && node && signal) {
-      // Calculate connection points using the same function as the ConnectionLine component
-      const { start, end } = calculateConnectionPoints(
-        node.text,
-        nodePos.x,
-        nodePos.y,
-        signal.text,
-        signalPos.x,
-        signalPos.y
-      )
+      if (svgRect) {
+        const nodeX = nodeRect.left - svgRect.left + nodeRect.width / 2
+        const nodeY = nodeRect.top - svgRect.top + nodeRect.height / 2
+        const signalX = signalRect.left - svgRect.left + signalRect.width / 2
+        const signalY = signalRect.top - svgRect.top + signalRect.height / 2
 
-      // Update line position
-      lineElement.setAttribute("x1", start.x.toString())
-      lineElement.setAttribute("y1", start.y.toString())
-      lineElement.setAttribute("x2", end.x.toString())
-      lineElement.setAttribute("y2", end.y.toString())
+        const { start, end } = calculateConnectionPoints(
+          nodes.find(n => n.id === nodeId)?.text || "",
+          nodeX,
+          nodeY,
+          nodes.find(n => n.id === nodeId)?.signals.find(s => s.id === signalId)?.text || "",
+          signalX,
+          signalY
+        )
 
-      // Update dot position
-      dotElement.setAttribute("cx", end.x.toString())
-      dotElement.setAttribute("cy", end.y.toString())
+        lineElement.setAttribute("x1", start.x.toString())
+        lineElement.setAttribute("y1", start.y.toString())
+        lineElement.setAttribute("x2", end.x.toString())
+        lineElement.setAttribute("y2", end.y.toString())
+        dotElement.setAttribute("cx", end.x.toString())
+        dotElement.setAttribute("cy", end.y.toString())
+      }
     }
-  }
+  }, [nodes])
 
   const startAnimations = () => {
     stopAnimations()
